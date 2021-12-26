@@ -1,3 +1,7 @@
+token.txt
+module/token/
+module/token/token.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -130,3 +134,4 @@ dmypy.json
 
 #token
 module/token/token.txt
+*/*/token.txt
