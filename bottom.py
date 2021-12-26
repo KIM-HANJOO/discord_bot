@@ -10,6 +10,7 @@ import pandas as pd
 main_dir = os.getcwd()
 module_dir = os.path.join(main_dir, 'module')
 token_dir = main_dir
+watchdir = os.path.join(main_dir, 'log')
 
 import sys
 sys.path.append(module_dir)
@@ -39,9 +40,6 @@ bot=commands.Bot(command_prefix='$')
 print('BOT_TOM awaking')
 
 
-ch = bot.get_channel(channel)
-print(ch)
-
 @bot.event
 async def on_ready() :
     print("Tommy is ready !")
@@ -60,60 +58,102 @@ async def on_ready() :
 # watchdog
 @bot.command()
 async def watchdog(ctx) :
-    df = pd.DataFrame(columns = 
-    if ctx != '' :
-        print(f'channel id : {ch}')
-        watchdir = os.path.join(main_dir, 'tmp')
-        oldtm = 0
-        watch = 1
-        old_files = os.listdir(watchdir)
-        while watch == 1 :
+    df = pd.DataFrame()
 
-            if os.listdir(watchdir) != [] :
-                print(os.listdir(watchdir))
-                new_files = os.listdir(watchdir)
+    if ctx == '' :
+        return
 
-                # if new file is added
-                if old_files != new_files : 
-                    st_files = [x for x in new_files if x not in old_files]
-                    if len(st_files) != 0 :
-                        await ch.send('new files')
-                        for tmpfile in st_files :
-                            path_file = os.path.join(watchdir, tmpfile)
-                            await ctx.send(file = discord.File(path_file))
+    os.chdir(watchdir)
 
-                # if file is changed
-                for tmpfile in os.listdir(watchdir) : 
-                    try :
-                        print(f'{tmpfile} checking')
-                        os.chdir(watchdir)
-                        newtm = os.path.getmtime(tmpfile)
-                        print(newtm)
+    oldtm = 0
+    watch = 1
+    old_files = os.listdir(watchdir)
+       
+    # add files & mtimes to df
+    if len(old_files) != 0 :
+        for ofile in old_files :
+            if ('.swp' not in ofile) & ('.swo' not in ofile) :
+                df[f'{ofile}'] = [os.path.getmtime(ofile)]
 
-                        if oldtm != newtm :
-                            if oldtm != 0 : # {tempfile} changed
-                                print(f'{tmpfile} changed')
-                                path_file = os.path.join(watchdir, tmpfile)
-                                await ctx.send('changed')
-                                await ctx.send(file = discord.File(path_file))
-#                            for guilds in bot.guilds :
-#                                for ch in guilds.channel :
-#                                    await ch.send('changed')
-#                                    await ch.send(file = discord.File(path_file))
-                                oldtm = newtm
-                            if oldtm == 0 :
-                                oldtm = newtm
-                        else :
-                            print(f'{tmpfile} not changed')
-                            pass
-                    except FileNotFoundError :
-                        print('file not found')
-                        pass
+    # watch changes
+    while watch == 1 :
+        print('\nwatching ...\n')
+        # delete deleted files
+        for ofile in df.columns :
+            if ofile not in os.listdir(watchdir) :
+                df.drop([ofile], axis = 1, inplace = True)
+
+        
+        # if file is added
+        if os.listdir(watchdir) != [] :
+            st_files = [x for x in os.listdir(watchdir) if x not in df.columns]
+            for item in st_files :
+                if ('.swp' in item) | ('.swo' in item) :
+                    st_files.remove(item)
+
+            if st_files != [] :
+                await ctx.send('new file(s) added\n')
                 
-            print(f'oldtm = {oldtm}, newtm = {newtm}')
-            print('\n\n')
-            old_files = os.listdir(watchdir)
-            await asyncio.sleep(4)
+                for tmpfile in st_files :
+                    path_file = os.path.join(watchdir, tmpfile)
+                    await ctx.send(f'{tmpfile}')
+                    await ctx.send(file = discord.File(path_file))
+
+                    df[tmpfile] = [os.path.getmtime(tmpfile)]
+        
+        # if change in getmtime
+        for tmpfile in df.columns :
+            try :
+                newtm = os.path.getmtime(tmpfile)
+                if df.loc[0, tmpfile] != newtm : #if file is changed
+                    print(f'{tmpfile} changed\n')
+                    path_file = os.path.join(watchdir, tmpfile)
+                    await ctx.send(f'{tmpfile} changed')
+                    await ctx.send(file = discord.File(path_file))
+
+                    df.loc[0, tmpfile] = newtm
+            except FileNotFoundError :
+                print('file not found')
+                await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
+        print(df)
+                    
+        await asyncio.sleep(4)
+
+
+
+
+#                # if file is changed
+#                for tmpfile in os.listdir(watchdir) : 
+#                    try :
+#                        print(f'{tmpfile} checking')
+#                        os.chdir(watchdir)
+#                        newtm = os.path.getmtime(tmpfile)
+#                        print(newtm)
+#
+#                        if oldtm != newtm :
+#                            if oldtm != 0 : # {tempfile} changed
+#                                print(f'{tmpfile} changed')
+#                                path_file = os.path.join(watchdir, tmpfile)
+#                                await ctx.send('changed')
+#                                await ctx.send(file = discord.File(path_file))
+##                            for guilds in bot.guilds :
+##                                for ch in guilds.channel :
+##                                    await ch.send('changed')
+##                                    await ch.send(file = discord.File(path_file))
+#                                oldtm = newtm
+#                            if oldtm == 0 :
+#                                oldtm = newtm
+#                        else :
+#                            print(f'{tmpfile} not changed')
+#                            pass
+#                    except FileNotFoundError :
+#                        print('file not found')
+#                        pass
+#                
+#            print(f'oldtm = {oldtm}, newtm = {newtm}')
+#            print('\n\n')
+#            old_files = os.listdir(watchdir)
+#            await asyncio.sleep(4)
 
 
 

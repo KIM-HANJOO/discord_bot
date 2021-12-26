@@ -1,6 +1,8 @@
-token.txt
 module/token/
-module/token/token.txt
+token.txt
+.*.swp
+.*.*.swp
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
