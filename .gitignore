@@ -1,6 +1,4 @@
-module/token/
 token.txt
-*/token.txt
 .*.swp
 .*.*.swp
 
@@ -134,7 +132,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-#token
-module/token/token.txt
-*/*/token.txt
