@@ -5,6 +5,7 @@ import asyncio
 import nest_asyncio
 import os
 import time
+from PIL import Image
 
 main_dir = os.getcwd()
 module_dir = os.path.join(main_dir, 'module')
@@ -54,8 +55,28 @@ async def on_ready() :
 #ch = text_channel_list[0]
 
 # watchdog
+def size_down_png(file_path) :
+    if os.path.getsize(file_path) > 8 * pow(1024, 2):
+        img = Image.open(file_path)
+        width, height = img.size
+
+        ratio = 8 * pow(1024, 2) / os.path.getsize(file_path)
+        img = img.resize((width * ratio * 0.8, height * ratio * 0.8))
+        img.save(file_path)
+
+def time_keeper(gap) :
+    set_time = 10 * 60 # watchdog sleeptime = 1 if gap < 10min
+    
+    if gap < set_time :
+        stime = 1
+
+    else :
+        stime = 10
+
+    return stime
+
 @bot.command()
-async def watchdog(ctx, *, arg) :
+async def watchdog(ctx) :
     f_dict = dict()
 
     if ctx == '' :
@@ -74,6 +95,8 @@ async def watchdog(ctx, *, arg) :
                 f_dict[ofile] =  os.path.getmtime(ofile)
 
     # watch changes
+    gap_start = time.time()
+
     while watch == 1 :
         print('\nwatching ...\n')
         # delete deleted files
@@ -94,10 +117,12 @@ async def watchdog(ctx, *, arg) :
                 
                 for tmpfile in st_files :
                     path_file = os.path.join(watchdir, tmpfile)
+                    size_down_png(path_file)
                     await ctx.send(f'{tmpfile}')
                     await ctx.send(file = discord.File(path_file))
 
                     f_dict[tmpfile] = os.path.getmtime(tmpfile)
+                    gap_start = time.time()
         
         # if change in getmtime
         for tmpfile in list(f_dict.keys()) :
@@ -106,16 +131,22 @@ async def watchdog(ctx, *, arg) :
                 if f_dict[tmpfile] != newtm : #if file is changed
                     print(f'{tmpfile} changed\n')
                     path_file = os.path.join(watchdir, tmpfile)
+                    size_down_png(path_file)
                     await ctx.send(f'{tmpfile} changed')
                     await ctx.send(file = discord.File(path_file))
 
                     f_dict[tmpfile] = newtm
+                    gap_start = time.time()
             except FileNotFoundError :
                 print('file not found')
                 await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
         print(f_dict)
-                    
-        await asyncio.sleep(int(arg))
+
+        gap_end = time.time()            
+        stime = time_keeper(gap_end - gap_start)
+
+        print(f'resting for {round(gap_end - gap_start)}sec, sleeptime = {stime}')
+        await asyncio.sleep(int(round(stime)))
 
 
 
