@@ -1,0 +1,7 @@
+sleeptime of watchdog is :
+	1sec before 10 min from last request
+	10sec after 10min from last request
+
+don't send file with name :
+	'watchdog_show.txt'
+	'watchdog_info.txt'
