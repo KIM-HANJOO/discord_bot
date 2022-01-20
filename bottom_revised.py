@@ -160,8 +160,7 @@ def stable(df, title) : # make string as Table from table.py
     return temp
 
 
-def is_target_file(file_name) :
-    target_list = ['*.xlsx', '*.png', '*.docx', '*.pptx', '*.jpg', '*.jpeg']
+def is_target_file_inlist(file_name, target_list) :
     for item in target_list :
         if item[-1] == '*' :
             if item[0] == '*' :
@@ -189,8 +188,48 @@ def is_target_file(file_name) :
 
     return check
 
-@bot.command()
+def is_target_file(file_name) :
+    target_list = ['*.xlsx', '*.png', '*.docx', '*.pptx', '*.jpg', '*.jpeg', '*.txt']
+    for item in target_list :
+        if item[-1] == '*' :
+            if item[0] == '*' :
+                # *smth* -> smth in string
+                if item[1 : -1] in file_name :
+                    check = True
+                    break
+                else :
+                    check = False
 
+            # smth* -> start string == smth
+            else :
+                if file_name[len(item) - 1] == item[ : -1] :
+                    check = True
+                    break
+                else :
+                    check = False
+        # *smth
+        else :
+            if file_name[-(len(item) - 1) : ] == item[1 : ] :
+                check = True
+                break
+            else :
+                check = False
+
+    return check
+
+def is_except_files(file_name) :
+
+    except_list = ['*.swp', '*.swo', '.*', 'watchdog_show.txt']
+    if not is_target_file_inlist(file_name, except_list) :
+        return True
+    else :
+        return False
+
+    
+
+
+
+@bot.command()
 async def watchdog(ctx) :
     if ctx == '' :
         return
@@ -221,7 +260,7 @@ async def watchdog(ctx) :
     if len(watchlist) != 0 :
         for file_name in watchlist :
             os.chdir(watchdir)
-            f_dict[file_name] = os.path.gettime(file_name)
+            f_dict[file_name] = os.path.getmtime(file_name)
 
     # watch changes
     gap_start = time.time()
@@ -231,6 +270,7 @@ async def watchdog(ctx) :
     # -------------------
 
     # semi-update
+    watch = 1
     # if file in watchlist not in folder : delete file from watchlist
     while watch == 1 :
         for file_name in watchlist :
@@ -263,29 +303,28 @@ async def watchdog(ctx) :
                     else :
                         await ctx.send(f"{tmpfile} size is bigger than 8Mb\ncan't send file")
 
-                    for item in except_files :
-                        if item not in tmpfile :
-                            f_dict[tmpfile] = os.path.getmtime(tmpfile)
+                    if not is_except_files(tmpfile) :
+                        f_dict[tmpfile] = os.path.getmtime(tmpfile)
+
                     gap_start = time.time()
         
         # if change in getmtime
         for tmpfile in list(f_dict.keys()) :
             try :
-                for item in except_files :
-                    if item not in tmpfile :
-                        newtm = os.path.getmtime(tmpfile)
-                        if f_dict[tmpfile] != newtm : #if file is changed
-                            print(f'{tmpfile} changed\n')
-                            path_file = os.path.join(watchdir, tmpfile)
-                            if os.path.getsize(path_file) / pow(1024, 2) < 8 :
-                            #path_file = size_down_png(path_file)
-                                await ctx.send(f'{tmpfile}')
-                                await ctx.send(file = discord.File(path_file))
-                            else :
-                                await ctx.send(f'{tmpfile} size is bigger than 8Mb')
+                if not is_except_files(tmpfile) :
+                    newtm = os.path.getmtime(tmpfile)
+                    if f_dict[tmpfile] != newtm : #if file is changed
+                        print(f'{tmpfile} changed\n')
+                        path_file = os.path.join(watchdir, tmpfile)
+                        if os.path.getsize(path_file) / pow(1024, 2) < 8 :
+                        #path_file = size_down_png(path_file)
+                            await ctx.send(f'{tmpfile}')
+                            await ctx.send(file = discord.File(path_file))
+                        else :
+                            await ctx.send(f'{tmpfile} size is bigger than 8Mb')
 
-                            f_dict[tmpfile] = newtm
-                            gap_start = time.time()
+                        f_dict[tmpfile] = newtm
+                        gap_start = time.time()
             except FileNotFoundError :
                 print('file not found')
                 await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
