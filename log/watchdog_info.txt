@@ -1,8 +1,8 @@
 =============< Watchdog Info >=============
     var    explane                            
 ============================================
-0   3      sec | time after the last request  
-1   1      sec | watchdog sleep time          
+0   35086  sec | time after the last request  
+1   10     sec | watchdog sleep time          
 2   40     num | of files in watchdir         
 3   0.051  mb  | volume of watchdir           
 ============================================

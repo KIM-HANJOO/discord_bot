@@ -219,7 +219,7 @@ def is_target_file(file_name) :
 
 def is_except_files(file_name) :
 
-    except_list = ['*.swp', '*.swo', '.*', 'watchdog_show.txt']
+    except_list = ['*.swp', '*.swo', 'watchdog_show.txt']
     if not is_target_file_inlist(file_name, except_list) :
         return True
     else :
@@ -238,7 +238,6 @@ async def watchdog(ctx) :
     f = open(os.path.join(watchdir, 'watchdog_show.txt'), 'w')
     f.write("sleeptime of watchdog is :\n\t1sec before 10 min from last request\n\t10sec after 10min from last request\n\ndon't send file with name :\n\t'watchdog_show.txt'\n\t'watchdog_info.txt'")
     f.close()
-
     await ctx.send(file = discord.File(os.path.join(watchdir, 'watchdog_show.txt')))
 
     # make watchlist (is_target_file())
@@ -283,7 +282,7 @@ async def watchdog(ctx) :
 
         # if file is added
         if os.listdir(watchdir) != [] :
-            # new_files : newly added, not in f_dict keys
+        show    # new_files : newly added, not in f_dict keys
             new_files = [x for x in os.listdir(watchdir) if x not in list(f_dict.keys())]
 
             # delete 
@@ -357,6 +356,8 @@ async def watchdog_info(ctx) :
     f = open(os.path.join(watchdir, 'watchdog_info.txt'), 'w')
     f.write(info_string)
     f.close()
+
+    await ctx.send(file = discord.File(os.path.join(watchdir, 'watchdog_info.txt')))
 
 @bot.command()
 async def watchdog_reset(ctx) :
