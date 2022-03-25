@@ -230,8 +230,11 @@ async def watchdog(ctx) :
     # watchdog
     # -------------------
 
+    except_files = []
+
     # semi-update
     # if file in watchlist not in folder : delete file from watchlist
+    watch = 1
     while watch == 1 :
         for file_name in watchlist :
             if file_name not in os.listdir(watchdir) :
@@ -266,6 +269,7 @@ async def watchdog(ctx) :
                     for item in except_files :
                         if item not in tmpfile :
                             f_dict[tmpfile] = os.path.getmtime(tmpfile)
+
                     gap_start = time.time()
         
         # if change in getmtime
@@ -286,6 +290,7 @@ async def watchdog(ctx) :
 
                             f_dict[tmpfile] = newtm
                             gap_start = time.time()
+                            print(f'f_dict[tmpfile] = {f_dict[tmpfile]}, newtm = {newtm}')
             except FileNotFoundError :
                 print('file not found')
                 await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
@@ -395,6 +400,7 @@ async def add_stem_to(ctx, *, arg, arg2) :
 
 
 # ----------------------------------------------------------------
+# ETC.
 # ----------------------------------------------------------------
 
 

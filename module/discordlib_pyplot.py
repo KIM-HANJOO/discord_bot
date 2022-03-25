@@ -11,8 +11,15 @@ def savefig(savepath, filename, dpi) :
     os.system(f'rsync -v {file_path} pi:{discord_path}')
     print('.png file sent to raspberry-pi (discord_bot)')
 
-def shoot_file(savepath, filename) :
+def shoot_file(savepath, ) :
     file_path = os.path.join(savepath, filename)
     discord_path = '/media/pi/toshiba/Git/discord_bot/log'
     os.system(f'rsync -v {file_path} pi:{discord_path}')
     print('file sent to raspberry-pi (discord_bot)')
+
+def sample() :
+    pass
+
+
+sample()
+
