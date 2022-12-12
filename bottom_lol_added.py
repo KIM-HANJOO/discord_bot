@@ -20,13 +20,33 @@ sys.path.append(token_dir)
 import table
 import pandas as pd
 
-## import submodules from module_dir ##
-#import submodule_watchdog as sw
-#exec(os.path.join(module_dir, 'submodule_watchdog.py'))
-#######################################
-
 main_dir = os.getcwd()
 log_dir = os.path.join(main_dir, 'log')
+
+# ----------------------------------------------------------------
+# LOL api, request infos
+# ----------------------------------------------------------------
+import requests
+from urllib import parse
+import time
+
+#read api_key
+os.chdir(token_dir)
+api_f = open('lol_api.txt', 'r')
+api_string = api_f.readline()[ : -2]
+print(f'LOL_api : {api_string.split()}')
+api_f.close()
+
+api_key = f"{api_string}" # add token == api_key here
+request_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9,ko-KR;q=0.8,ko;q=0.7",
+        "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Origin": "https://developer.riotgames.com",
+        "X-Riot-Token": f"{api_string}" # add token here
+}
+
+
 
 # ----------------------------------------------------------------
 # make sample
@@ -288,13 +308,20 @@ async def watchdog(ctx) :
     # watchdog
     # -------------------
 
-    except_files = []
-
     # semi-update
     watch = 1
     # if file in watchlist not in folder : delete file from watchlist
-    watch = 1
     while watch == 1 :
+
+        # reset watchlist
+        watchlist = None
+        watchlist = []
+
+        # add items to watchlist : if target_file
+        for item in os.listdir(watchdir) :
+            if is_target_file(item) :
+                watchlist.append(item)
+
         print(f_dict)
         for file_name in watchlist :
             if file_name not in os.listdir(watchdir) :
@@ -326,17 +353,11 @@ async def watchdog(ctx) :
                     else :
                         await ctx.send(f"{tmpfile} size is bigger than 8Mb\ncan't send file")
 
-<<<<<<< HEAD
-                    for item in except_files :
-                        if item not in tmpfile :
-                            f_dict[tmpfile] = os.path.getmtime(tmpfile)
-=======
                     if not is_except_files(tmpfile) :
                         f_dict[tmpfile] = os.path.getmtime(tmpfile)
                     else :
                         print(f"{tmpfile} is in ['*.swp', '*.swo', 'watchdog_show.txt', 'sample_image.png']")
 
->>>>>>> 056fb21d7d81190c6ce4324ed59e55cd60113255
 
                     gap_start = time.time()
         
@@ -358,7 +379,6 @@ async def watchdog(ctx) :
                         f_dict[tmpfile] = newtm
                         if not is_target_file_inlist(tmpfile, ['sample_image.png']) :
                             gap_start = time.time()
-                            print(f'f_dict[tmpfile] = {f_dict[tmpfile]}, newtm = {newtm}')
             except FileNotFoundError :
                 print('file not found')
                 await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
@@ -445,11 +465,24 @@ async def watchdog_head(ctx) :
 # HTTP Request
 # ----------------------------------------------------------------
 
-async def add_summoner(ctx, *, arg) :
-    pass
-    
+class LOL() :
+    def __init__(self) :
+        summoner_list = ['왈왈왈왁왈왈', '양구대장', '힐좀해줘']
+        
+    def add_summoner(self, name) :
+        self.summoner_list.append(name)
 
+def get_response_summoner_v4(name) :
+    encoded_name = parse.quote(name)
+    requests_summoner_v4 = requests.get("https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + encoded_name, headers=request_headers).json()
 
+    return requests_summoner_v4
+
+@bot.command()
+async def get_log(ctx, *, arg) :
+    # start throwing requests
+    requests_summoner_v4 = get_response_summoner_v4(arg)
+    await ctx.send(requests_summoner_v4)
 
 
 
@@ -485,7 +518,6 @@ async def add_stem_to(ctx, *, arg, arg2) :
 
 
 # ----------------------------------------------------------------
-# ETC.
 # ----------------------------------------------------------------
 
 

@@ -21,5 +21,4 @@ def sample() :
     pass
 
 
-sample()
 
