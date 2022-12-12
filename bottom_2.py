@@ -20,6 +20,7 @@ sys.path.append(token_dir)
 os.chdir(token_dir)
 tk_f = open('token.txt', 'r')
 to = tk_f.readline()
+print(to)
 tk_f.close()
 
 # read server id

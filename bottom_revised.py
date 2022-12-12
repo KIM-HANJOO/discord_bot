@@ -11,6 +11,7 @@ main_dir = os.getcwd()
 module_dir = os.path.join(main_dir, 'module')
 token_dir = os.path.join(module_dir, 'token')
 watchdir = os.path.join(main_dir, 'log')
+infodir = os.path.join(main_dir, 'info')
 workflow_dir = os.path.join(main_dir, 'workflow')
 message_dir = os.path.join(main_dir, 'message')
 
@@ -59,15 +60,18 @@ ch_f = open('channel.txt', 'r')
 channel = ch_f.readline()
 ch_f.close()
 
-
 # prefix $
-bot=commands.Bot(command_prefix='$')
-print('BOT_TOM awaking')
+#intents = discord.Intents(messages = True, guilds = True)
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents = intents)
+bot=commands.Bot(command_prefix='$', intents = intents)
+print("I'm Waddler. I can carry your items deeper into the caves for you.")
 
 
 @bot.event
 async def on_ready() :
-    print("Tommy is ready !")
+    print("I'm Waddler. I can carry your items deeper into the caves for you.")
 
     await bot.change_presence(status = discord.Status.online, activity = None)
     #await watchdog()
@@ -244,8 +248,79 @@ def is_except_files(file_name) :
     else :
         return False
 
+
+@bot.command()
+async def stop_backup(ctx) :
+    f = open(os.path.join(infodir, 'backup_check.txt'), 'w')
+    f.write("stop backup")
+    f.close()
+    await ctx.send('This is as far as I go. I hope I helped you on your journey.')
+
     
 
+@bot.command()
+async def backup(ctx, *, arg) :
+    f = open(os.path.join(infodir, 'backup_check.txt'), 'w')
+    f.write("keep backup")
+    f.close()
+    await ctx.send("I'm Waddler. I can carry your items deeper into the caves for you.")
+
+    check = True
+
+    if ctx == 'out' :
+        check = False
+
+
+    
+    prefix_rsync = 'rsync -av -progress --update'
+
+    home_watchdir = '/mnt/c/Users/joo09/Documents/Github_shared'
+    home_github_shared = os.path.join('mnt', 'c', 'Users', 'joo09', 'Documents', 'Github_shared')
+    home_to_dropbox = os.path.join(home_github_shared, 'micro_climate', 'to_dropbox')
+
+    home_w1 = os.path.join(home_to_dropbox, '0_S-DOT', 'S-DOT_plots')
+    home_w2 = os.path.join(home_to_dropbox, '0_S-DOT', 'org_data', 'raw_plot')
+    home_w3 = os.path.join(home_to_dropbox, '4_plots')
+    home_w4 = os.path.join(home_to_dropbox, '6_AQM', '4_plot')
+
+
+    pi_waypoint = os.path.join('media', 'pi', 'toshiba', 'watchdog')
+    dropbox = os.path.join('mnt', 'd', 'Dropbox', 'watchdog')
+    mac_watchdir = os.path.join('Users',' hanjoo', 'Documents', 'Github', 'watchdog')
+
+    
+    while True :
+        f = open(os.path.join(infodir, 'backup_check.txt'), 'r')
+
+        if f.readline() == 'stop backup' :
+            f.close()
+            break
+
+        else :
+            f.close()
+
+
+        # backups
+
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w1} {pi_waypoint}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w1} bp@192.168.219.101:{dropbox}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w2} {pi_waypoint}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w2} bp@192.168.219.101:{dropbox}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w3} {pi_waypoint}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w3} bp@192.168.219.101:{dropbox}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w4} {pi_waypoint}')
+        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w4} bp@192.168.219.101:{dropbox}')
+
+        if check :
+            os.system(f'{prefix_rsync} {pi_waypoint} hanjoo@192.168.219.101:{mac_watchdir}')
+
+        await ctx.send('Waiting ! from now on.. 30 sec.')
+        await asyncio.sleep(30)
+
+
+
+
+    
 
 
 @bot.command()
@@ -326,17 +401,14 @@ async def watchdog(ctx) :
                     else :
                         await ctx.send(f"{tmpfile} size is bigger than 8Mb\ncan't send file")
 
-<<<<<<< HEAD
                     for item in except_files :
                         if item not in tmpfile :
                             f_dict[tmpfile] = os.path.getmtime(tmpfile)
-=======
                     if not is_except_files(tmpfile) :
                         f_dict[tmpfile] = os.path.getmtime(tmpfile)
                     else :
                         print(f"{tmpfile} is in ['*.swp', '*.swo', 'watchdog_show.txt', 'sample_image.png']")
 
->>>>>>> 056fb21d7d81190c6ce4324ed59e55cd60113255
 
                     gap_start = time.time()
         
