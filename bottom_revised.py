@@ -20,7 +20,24 @@ sys.path.append(token_dir)
 import table
 import pandas as pd
 
+## import submodules from module_dir ##
+#import submodule_watchdog as sw
+#exec(os.path.join(module_dir, 'submodule_watchdog.py'))
+#######################################
 
+main_dir = os.getcwd()
+log_dir = os.path.join(main_dir, 'log')
+
+# ----------------------------------------------------------------
+# make sample
+# ----------------------------------------------------------------
+from PIL import Image
+
+def sample_maker(log_dir, title) :
+    image = Image.new(mode = 'P', size = (10, 10), color = 'red')
+    os.chdir(log_dir)
+    image.save(f'{title}.png')
+    print('saved')
 
 # ----------------------------------------------------------------
 # start Bottom
@@ -217,10 +234,12 @@ def is_target_file(file_name) :
 
     return check
 
+
+# check if file needs to be ignored (True : ignore / False : send)
 def is_except_files(file_name) :
 
-    except_list = ['*.swp', '*.swo', 'watchdog_show.txt']
-    if not is_target_file_inlist(file_name, except_list) :
+    except_list = ['*.swp', '*.swo']
+    if is_target_file_inlist(file_name, except_list) :
         return True
     else :
         return False
@@ -231,6 +250,7 @@ def is_except_files(file_name) :
 
 @bot.command()
 async def watchdog(ctx) :
+    sample_gap_time = 60
     if ctx == '' :
         return
 
@@ -272,6 +292,7 @@ async def watchdog(ctx) :
     watch = 1
     # if file in watchlist not in folder : delete file from watchlist
     while watch == 1 :
+        print(f_dict)
         for file_name in watchlist :
             if file_name not in os.listdir(watchdir) :
                 del f_dict[file_name]
@@ -282,7 +303,7 @@ async def watchdog(ctx) :
 
         # if file is added
         if os.listdir(watchdir) != [] :
-        show    # new_files : newly added, not in f_dict keys
+            # new_files : newly added, not in f_dict keys
             new_files = [x for x in os.listdir(watchdir) if x not in list(f_dict.keys())]
 
             # delete 
@@ -304,6 +325,9 @@ async def watchdog(ctx) :
 
                     if not is_except_files(tmpfile) :
                         f_dict[tmpfile] = os.path.getmtime(tmpfile)
+                    else :
+                        print(f"{tmpfile} is in ['*.swp', '*.swo', 'watchdog_show.txt', 'sample_image.png']")
+
 
                     gap_start = time.time()
         
@@ -323,7 +347,8 @@ async def watchdog(ctx) :
                             await ctx.send(f'{tmpfile} size is bigger than 8Mb')
 
                         f_dict[tmpfile] = newtm
-                        gap_start = time.time()
+                        if not is_target_file_inlist(tmpfile, ['sample_image.png']) :
+                            gap_start = time.time()
             except FileNotFoundError :
                 print('file not found')
                 await ctx.send(f'{tmpfile} raised FileNotFoundError\n')
@@ -334,11 +359,15 @@ async def watchdog(ctx) :
         gap_end = time.time()            
         gap_now = gap_end - gap_start
         stime = time_keeper(gap_now)
+        gap_to_min = round(gap_now) / 60
 
 
-        print(f'<watchdog>\nresting for {round(gap_end - gap_start)}sec, sleeptime = {stime}\n')
+        print(f'\n<watchdog>\nresting for {round(gap_now)}sec, {round(gap_to_min, 1)}min\nsleeptime = {stime}\n')
         await asyncio.sleep(int(round(stime)))
 
+        if (gap_to_min != 0) & (round(gap_now) % (60 * sample_gap_time) == 0) : #(gap_to_min % sample_gap_time == 0) :
+            sample_maker(watchdir, 'bark!')
+            await ctx.send(f'running sample function, time elapsed : {round(gap_to_min, 1)} (min)')
 
 @bot.command()
 async def watchdog_info(ctx) :
@@ -399,6 +428,17 @@ async def watchdog_head(ctx) :
 
     for val in f_values :
         pass
+
+
+
+# ----------------------------------------------------------------
+# HTTP Request
+# ----------------------------------------------------------------
+
+async def add_summoner(ctx, *, arg) :
+    pass
+    
+
 
 
 
