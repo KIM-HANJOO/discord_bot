@@ -11,7 +11,7 @@ main_dir = os.getcwd()
 module_dir = os.path.join(main_dir, 'module')
 token_dir = os.path.join(module_dir, 'token')
 watchdir = os.path.join(main_dir, 'log')
-infodir = os.path.join(main_dir, 'info')
+infodir = os.path.join(main_dir, 'watchdog_info')
 workflow_dir = os.path.join(main_dir, 'workflow')
 message_dir = os.path.join(main_dir, 'message')
 
@@ -62,6 +62,8 @@ ch_f.close()
 
 # prefix $
 #intents = discord.Intents(messages = True, guilds = True)
+
+#### intents #####
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents = intents)
@@ -260,6 +262,8 @@ async def stop_backup(ctx) :
 
 @bot.command()
 async def backup(ctx, *, arg) :
+    interval = 3
+    itera = 0
     f = open(os.path.join(infodir, 'backup_check.txt'), 'w')
     f.write("keep backup")
     f.close()
@@ -274,8 +278,9 @@ async def backup(ctx, *, arg) :
     
     prefix_rsync = 'rsync -av -progress --update'
 
-    home_watchdir = '/mnt/c/Users/joo09/Documents/Github_shared'
-    home_github_shared = os.path.join('mnt', 'c', 'Users', 'joo09', 'Documents', 'Github_shared')
+    #home_watchdir = '/mnt/c/Users/joo09/Documents/Github_shared'
+
+    home_github_shared = os.path.join('/', 'mnt', 'c', 'Users', 'joo09', 'Documents', 'Github_shared')
     home_to_dropbox = os.path.join(home_github_shared, 'micro_climate', 'to_dropbox')
 
     home_w1 = os.path.join(home_to_dropbox, '0_S-DOT', 'S-DOT_plots')
@@ -284,11 +289,18 @@ async def backup(ctx, *, arg) :
     home_w4 = os.path.join(home_to_dropbox, '6_AQM', '4_plot')
 
 
-    pi_waypoint = os.path.join('media', 'pi', 'toshiba', 'watchdog')
-    dropbox = os.path.join('mnt', 'd', 'Dropbox', 'watchdog')
-    mac_watchdir = os.path.join('Users',' hanjoo', 'Documents', 'Github', 'watchdog')
+    pi_waypoint = os.path.join('/', 'media', 'pi', 'toshiba', 'watchdog')
+    dropbox = os.path.join('/', 'mnt', 'd', 'Dropbox', 'watchdog')
+    mac_watchdir = os.path.join('/', 'Users',' hanjoo', 'Documents', 'Github', 'watchdog')
 
+#    print('###########3')
+#    print(os.listdir(home_w1))
+#    print(os.listdir(dropbox))
+#    print(os.listdir(pi_wayout))
+#    print(os.listdir(amc_watchdir))
+#    print('###########3')
     
+    start = time.time()
     while True :
         f = open(os.path.join(infodir, 'backup_check.txt'), 'r')
 
@@ -303,19 +315,25 @@ async def backup(ctx, *, arg) :
         # backups
 
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w1} {pi_waypoint}')
-        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w1} bp@192.168.219.101:{dropbox}')
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w2} {pi_waypoint}')
-        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w2} bp@192.168.219.101:{dropbox}')
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w3} {pi_waypoint}')
-        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w3} bp@192.168.219.101:{dropbox}')
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w4} {pi_waypoint}')
-        os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w4} bp@192.168.219.101:{dropbox}')
+
+        os.system(f'{prefix_rsync} {pi_waypoint}  bp@192.168.219.101:{dropbox}')
 
         if check :
-            os.system(f'{prefix_rsync} {pi_waypoint} hanjoo@192.168.219.101:{mac_watchdir}')
+            os.system(f'{prefix_rsync} {pi_waypoint} hanjoo@192.168.219.104:{mac_watchdir}')
 
-        await ctx.send('Waiting ! from now on.. 30 sec.')
-        await asyncio.sleep(30)
+        toll = 10 #min
+        itera_toll = toll * 60 / interval
+
+        now_time = time.time()
+        itera += 1
+        delta_sec = round(now_time - start)
+        
+        if itera % itera_toll == 0 :
+            await ctx.send("Waiting ! every {interval} sec .. and it's been ... {roundtime} min.")
+        await asyncio.sleep(interval)
 
 
 

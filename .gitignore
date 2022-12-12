@@ -2,6 +2,7 @@ token.txt
 .*.swp
 .*.*.swp
 /log
+/module/token/lol_api_cp.txt
 
 
 # Byte-compiled / optimized / DLL files
