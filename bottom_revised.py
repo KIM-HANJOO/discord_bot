@@ -347,9 +347,9 @@ async def backup(ctx, *, arg) :
             # sleep for 'interval' second
             await asyncio.sleep(interval)
             if itera % round(toll * 60 / interval) == 0 :
-                show_interval_ul =  upper_and_lowercase(show_interval)
                 if itera != 0 :
-                    await msg_interval.delete()
+                    show_interval_ul =  upper_and_lowercase(show_interval)
+                    await msg_interval.edit(show_interval_ul)
                 msg_interval = await ctx.send(show_interval_ul)
 
 
@@ -363,9 +363,10 @@ async def backup(ctx, *, arg) :
 
             await asyncio.sleep(interval)
             if itera % round(toll * 60 / interval) == 0 :
-                show_daily_ul = upper_and_lowercase(show_daily)
                 if itera != 0 :
-                    await msg_daily.delete()
+                    show_daily_ul = upper_and_lowercase(show_daily)
+                    await msg_daily.edit(show_daily_ul)
+
                 msg_daily = await ctx.send(show_daily_ul)
                 
                 
