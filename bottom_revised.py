@@ -315,16 +315,26 @@ async def backup(ctx, *, arg) :
             f.close()
             return backup_type
 
+    def upper_and_lowercase(string, itera) :
+        size = len(string)
+        
+        left = size[: itera]
+        mid = size[itera]
+        right = size[itera + 1 :]
+
+        return left.lower + mid.upper + right.lower
 
     
     # interval settings
     toll = 10 #min
     interval = 3 #sec
     itera = 0 #iteration
+    show_interval = "Waiting ! every {interval} sec .. and it's been ... {roundtime} min."
 
     # daily settings
     bhour = 5
     bminute = 0
+    show_daily = "Backing up, at 5 am"
 
     # backup loop
     while True :
@@ -337,7 +347,10 @@ async def backup(ctx, *, arg) :
             # sleep for 'interval' second
             await asyncio.sleep(interval)
             if itera % round(toll * 60 / interval) == 0 :
-                await ctx.send("Waiting ! every {interval} sec .. and it's been ... {roundtime} min.")
+                show_interval_ul =  upper_and_lowercase(show_interval)
+                if itera != 0 :
+                    await msg_interval.delete()
+                msg_interval = await ctx.send(show_interval_ul)
 
 
         elif backup_type == 'daily' :
@@ -347,7 +360,15 @@ async def backup(ctx, *, arg) :
             if datetime.datetime.now >= stdrd :
                 backup_work()
                 backup_type = check_backuptype()
-                await ctx.send("Backing up, at 5 am")
+
+            await asyncio.sleep(interval)
+            if itera % round(toll * 60 / interval) == 0 :
+                show_daily_ul = upper_and_lowercase(show_daily)
+                if itera != 0 :
+                    await msg_daily.delete()
+                msg_daily = await ctx.send(show_daily_ul)
+                
+                
 
 
 
