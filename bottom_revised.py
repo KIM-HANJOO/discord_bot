@@ -262,8 +262,6 @@ async def stop_backup(ctx) :
 
 @bot.command()
 async def backup(ctx, *, arg) :
-    interval = 3
-    itera = 0
     f = open(os.path.join(infodir, 'backup_check.txt'), 'w')
     f.write("keep backup")
     f.close()
@@ -293,27 +291,7 @@ async def backup(ctx, *, arg) :
     dropbox = os.path.join('/', 'mnt', 'd', 'Dropbox', 'watchdog')
     mac_watchdir = os.path.join('/', 'Users',' hanjoo', 'Documents', 'Github', 'watchdog')
 
-#    print('###########3')
-#    print(os.listdir(home_w1))
-#    print(os.listdir(dropbox))
-#    print(os.listdir(pi_wayout))
-#    print(os.listdir(amc_watchdir))
-#    print('###########3')
-    
-    start = time.time()
-    while True :
-        f = open(os.path.join(infodir, 'backup_check.txt'), 'r')
-
-        if f.readline() == 'stop backup' :
-            f.close()
-            break
-
-        else :
-            f.close()
-
-
-        # backups
-
+    def backup_work() :
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w1} {pi_waypoint}')
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w2} {pi_waypoint}')
         os.system(f'{prefix_rsync} bp@192.168.219.101:{home_w3} {pi_waypoint}')
@@ -323,17 +301,57 @@ async def backup(ctx, *, arg) :
 
         if check :
             os.system(f'{prefix_rsync} {pi_waypoint} hanjoo@192.168.219.104:{mac_watchdir}')
-
-        toll = 10 #min
-        itera_toll = toll * 60 / interval
-
-        now_time = time.time()
-        itera += 1
-        delta_sec = round(now_time - start)
         
-        if itera % itera_toll == 0 :
-            await ctx.send("Waiting ! every {interval} sec .. and it's been ... {roundtime} min.")
-        await asyncio.sleep(interval)
+
+    def check_backuptype() :
+        f = open(os.path.join(infodir, 'backup_check.txt'), 'r')
+        if f.readline() == 'stop backup' :
+            backup_type = 'interval'
+            f.close()
+            return backup_type
+
+        else :
+            backup_type = 'daily'
+            f.close()
+            return backup_type
+
+
+    
+    # interval settings
+    toll = 10 #min
+    interval = 3 #sec
+    itera = 0 #iteration
+
+    # daily settings
+    bhour = 5
+    bminute = 0
+
+    # backup loop
+    while True :
+        if backup_type == 'interval' :
+            backup_work()
+
+            backup_type = check_backuptype()
+            itera += 1
+
+            # sleep for 'interval' second
+            await asyncio.sleep(interval)
+            if itera % round(toll * 60 / interval) == 0 :
+                await ctx.send("Waiting ! every {interval} sec .. and it's been ... {roundtime} min.")
+
+
+        elif backup_type == 'daily' :
+            now = datetime.datetime.now()
+            stdrd = datetime.datetime(year = now.year, month = now.month, day = now.day, hour = bhour, minute = bminute)
+
+            if datetime.datetime.now >= stdrd :
+                backup_work()
+                backup_type = check_backuptype()
+                await ctx.send("Backing up, at 5 am")
+
+
+
+
 
 
 
